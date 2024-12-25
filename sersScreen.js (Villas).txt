@@ -1,0 +1,148 @@
+sersScreen.js (Villas)
+
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, FlatList, Alert, TouchableOpacity, TextInput, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export default function UsersScreen() {
+  const [users, setUsers] = useState([]);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const allUsers = await AsyncStorage.getItem('users');
+        if (allUsers) {
+          setUsers(JSON.parse(allUsers));
+        }
+      } catch (error) {
+        Alert.alert('Erro', 'Erro ao carregar usuários');
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const handleAdminLogin = () => {
+    if (adminPassword === 'Villas123') { // Substitua 'Villas123' pela senha real
+      setIsAdminLoggedIn(true);
+    } else {
+      Alert.alert('Erro', 'Senha de administrador incorreta.');
+    }
+  };
+
+  const handleAdminPasswordChange = async () => {
+    try {
+      await AsyncStorage.setItem('adminPassword', newAdminPassword);
+      Alert.alert('Sucesso', 'Senha de administrador alterada com sucesso.');
+      setNewAdminPassword(''); // Limpar o campo de nova senha após a alteração
+    } catch (error) {
+      Alert.alert('Erro', 'Erro ao alterar a senha de administrador');
+      console.log('Erro ao alterar a senha de administrador:', error);
+    }
+  };
+
+  const removeUser = async (NumeroCadastro) => {
+    try {
+      const updatedUsers = users.filter((user) => user.NumeroCadastro !== NumeroCadastro);
+      await AsyncStorage.setItem('users', JSON.stringify(updatedUsers));
+      setUsers(updatedUsers);
+      Alert.alert('Sucesso', 'Usuário removido com sucesso.');
+    } catch (error) {
+      Alert.alert('Erro', 'Erro ao remover usuário');
+    }
+  };
+
+  const renderItem = ({ item }) => (
+    <View style={styles.item}>
+      <Text>Numero Cadastro: {item.NumeroCadastro}</Text>
+      <Text>Password: {item.password}</Text>
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => removeUser(item.NumeroCadastro)}
+      >
+        <Text style={styles.deleteText}>Excluir</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
+      {isAdminLoggedIn ? (
+        <>
+          <FlatList
+            data={users}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.NumeroCadastro.toString()}
+          />
+        </>
+      ) : (
+        <>
+          <TextInput
+            placeholder="Senha de administrador"
+            onChangeText={(text) => setAdminPassword(text)}
+            value={adminPassword}
+            secureTextEntry={true}
+            style={styles.input}
+          />
+          <TouchableOpacity style={styles.button} onPress={handleAdminLogin}>
+            <Text style={styles.buttonText}>Entrar como Administrador</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 20,
+    alignItems: 'center',
+  },
+  logo: {
+    width: 300,
+    height: 100,
+    marginBottom: 40,
+  },
+  item: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#FF0000',
+    padding: 5,
+    borderRadius: 5,
+  },
+  deleteText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  input: {
+    width: '80%',
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+  },
+  button: {
+    backgroundColor: '#FF0000',
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});

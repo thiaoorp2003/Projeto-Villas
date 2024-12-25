@@ -1,0 +1,58 @@
+DatatBase.Js (Villas)
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const createTable = async () => {
+  // Não é necessário criar uma tabela com AsyncStorage, pois ele lida com dados de forma diferente
+  console.log('Table created successfully');
+};
+
+export const addUser = async (NumeroCadastro, password) => {
+  try {
+    // Adicionar um novo usuário ao AsyncStorage
+    const newUser = { NumeroCadastro, password };
+    const users = await AsyncStorage.getItem('users');
+    let parsedUsers = [];
+    if (users) {
+      parsedUsers = JSON.parse(users);
+    }
+    parsedUsers.push(newUser);
+    await AsyncStorage.setItem('users', JSON.stringify(parsedUsers));
+    console.log('User added successfully');
+  } catch (error) {
+    console.log('Error adding user:', error);
+  }
+};
+
+export const getUser = async (NumeroCadastro, password, callback) => {
+  try {
+    // Obter todos os usuários do AsyncStorage e verificar se o usuário existe
+    const users = await AsyncStorage.getItem('users');
+    if (users) {
+      const parsedUsers = JSON.parse(users);
+      const foundUser = parsedUsers.find(user => user.NumeroCadastro === NumeroCadastro && user.password === password);
+      callback(foundUser || null);
+    } else {
+      callback(null);
+    }
+  } catch (error) {
+    console.log('Error fetching user:', error);
+    callback(null);
+  }
+};
+
+export const getAllUsers = async (callback) => {
+  try {
+    // Obter todos os usuários do AsyncStorage
+    const users = await AsyncStorage.getItem('users');
+    if (users) {
+      const parsedUsers = JSON.parse(users);
+      callback(parsedUsers);
+    } else {
+      callback([]);
+    }
+  } catch (error) {
+    console.log('Error fetching users:', error);
+    callback([]);
+  }
+};
